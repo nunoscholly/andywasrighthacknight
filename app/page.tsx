@@ -213,7 +213,7 @@ export default function Home() {
                   className={inputBase}
                   value={form.projectTitle}
                   onChange={(e) => update("projectTitle", e.target.value)}
-                  placeholder="Winter Photo Shoot 2026"
+                  placeholder="Q1 campaign refresh, new landing page, etc."
                 />
               </Field>
             </div>
@@ -227,7 +227,7 @@ export default function Home() {
                   className={inputBase}
                   value={form.shortDescription}
                   onChange={(e) => update("shortDescription", e.target.value)}
-                  placeholder="A series of Instagram posts that..."
+                  placeholder="We&rsquo;re looking to create..."
                 />
               </Field>
             </div>
@@ -268,7 +268,7 @@ export default function Home() {
             <div className="md:col-span-2">
               <Field
                 label="Concrete details"
-                hint="Locations, props, wardrobe, references, anything specific you've pictured."
+                hint="References, examples, look-and-feel, must-haves — anything specific you&rsquo;ve pictured."
               >
                 <textarea
                   rows={4}
@@ -281,7 +281,7 @@ export default function Home() {
             <div className="md:col-span-2">
               <Field
                 label="What does success look like?"
-                hint="Goals, KPIs, past work to build on, content ideas you've been chewing on."
+                hint="Goals, KPIs, past work to build on, ideas you&rsquo;ve been chewing on."
               >
                 <textarea
                   rows={5}
@@ -320,7 +320,7 @@ export default function Home() {
             <div className="md:col-span-2">
               <Field
                 label="What would you like us to deliver?"
-                hint="Rough volume is fine — e.g. '10 stills, 4 reels'. We'll firm it up."
+                hint="Rough volume is fine — e.g. a landing page, 10 photos, a 30-second video, 5 banner variants. We&rsquo;ll firm it up."
               >
                 <textarea
                   rows={3}
@@ -334,14 +334,14 @@ export default function Home() {
             </div>
             <div className="md:col-span-2">
               <Field
-                label="Formats needed"
-                hint="Comma-separated. Skip if unsure."
+                label="Sizes & formats"
+                hint="Aspect ratios, print sizes, file types — whatever applies. Skip if unsure."
               >
                 <input
                   className={inputBase}
                   value={form.formats}
                   onChange={(e) => update("formats", e.target.value)}
-                  placeholder="1:1, 4:5, 9:16"
+                  placeholder="1:1, 16:9, A4, MP4..."
                 />
               </Field>
             </div>
@@ -372,8 +372,8 @@ export default function Home() {
               />
             </Field>
             <Field
-              label="Earliest production date"
-              hint="When could we start?"
+              label="Earliest start date"
+              hint="When could we kick off?"
             >
               <input
                 type="date"
@@ -383,7 +383,7 @@ export default function Home() {
               />
             </Field>
             <Field
-              label="Latest production date"
+              label="Final delivery deadline"
               hint="When does this need to be wrapped?"
             >
               <input
@@ -411,7 +411,7 @@ export default function Home() {
             <div className="md:col-span-2">
               <Field
                 label="What's included in that budget?"
-                hint="Travel, models, accommodation, buyouts — anything specific."
+                hint="What&rsquo;s inside this number, what&rsquo;s outside (e.g. licenses, talent fees, travel, buyouts)."
               >
                 <textarea
                   rows={2}
@@ -430,8 +430,8 @@ export default function Home() {
           >
             <div className="md:col-span-2">
               <Field
-                label="Casting & models"
-                hint="Anyone you've worked with before, or specific casting requirements."
+                label="People involved"
+                hint="Talent, freelancers, partners, voiceover, casting — anyone with a role you&rsquo;d like us to know about."
               >
                 <textarea
                   rows={3}
@@ -444,7 +444,7 @@ export default function Home() {
             <div className="md:col-span-2">
               <Field
                 label="Timing details"
-                hint="Specific shoot days, travel, anything time-sensitive."
+                hint="Key dates, milestones, dependencies — anything time-sensitive."
               >
                 <textarea
                   rows={2}
