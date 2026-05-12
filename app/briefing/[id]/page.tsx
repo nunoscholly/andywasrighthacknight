@@ -1,4 +1,8 @@
+import { notFound } from "next/navigation";
+import { supabaseServer } from "@/lib/supabase";
 import type { Finding, Severity } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
 
 const SEVERITY_RANK: Record<Severity, number> = {
   critical: 0,
@@ -18,60 +22,8 @@ const SEVERITY_BADGE: Record<Severity, string> = {
   info: "text-sev-info",
 };
 
-const MOCK_FINDINGS: Finding[] = [
-  {
-    severity: "critical",
-    category: "completeness",
-    title: "Hotel name and location not specified",
-    what_to_clarify:
-      "Which specific premium mountain hotel in the Swiss Alps is the production base? The brief references the hotel's Michelin restaurant, private railway, and chalet — but never names it.",
-    why_it_matters:
-      "Without the venue locked, we can't scout, secure permits, lock travel, or align the model brief on color/wardrobe with the actual setting.",
-    priority: 1,
-  },
-  {
-    severity: "critical",
-    category: "risk",
-    title: "Production window ends before stated shoot date",
-    what_to_clarify:
-      "Production window is Dec 21 – Jan 23, but the shoot is on Wednesday Jan 28, 2026. Confirm whether the production window should extend, or the shoot date should move.",
-    why_it_matters:
-      "If we honor the stated window, the shoot date is impossible. If we honor the shoot date, we need a contract extension and possibly revised crew/model availability.",
-    priority: 2,
-  },
-  {
-    severity: "warning",
-    category: "plausibility",
-    title: "Budget appears tight for stated scope",
-    what_to_clarify:
-      "CHF 25k must cover travel, 3 models, accommodation at a premium Alpine hotel, crew (incl. Alex), production, post, AND a 2-year model buyout. Confirm whether buyout is in-budget or a separate line.",
-    why_it_matters:
-      "Premium Alpine locations and multi-year buyouts typically each consume a large share of this budget. Misalignment here surfaces late as scope-creep arguments.",
-    priority: 3,
-  },
-  {
-    severity: "warning",
-    category: "consistency",
-    title: "Visual guidelines referenced but not attached",
-    what_to_clarify:
-      "The client says color guidelines will be attached 'later' but the model brief depends on them. Get them before the model brief is finalized.",
-    why_it_matters:
-      "Locking models and wardrobe without the color code risks reshoots or retouching pressure later.",
-    priority: null,
-  },
-  {
-    severity: "info",
-    category: "completeness",
-    title: "Status call requested Jan 8/9",
-    what_to_clarify:
-      "Confirm which of Jan 8 or 9 works and put it on the calendar. Offer due date is Jan 9.",
-    why_it_matters:
-      "Same-day-as-offer status calls usually mean a last-minute push. Better to land on Jan 8.",
-    priority: null,
-  },
-];
-
-const eyebrow = "text-xs font-medium tracking-[0.18em] uppercase text-awr-grey";
+const eyebrow =
+  "text-xs font-medium tracking-[0.18em] uppercase text-awr-grey";
 
 function FindingCard({ finding }: { finding: Finding }) {
   return (
@@ -101,21 +53,66 @@ function FindingCard({ finding }: { finding: Finding }) {
   );
 }
 
+interface BriefingRow {
+  id: string;
+  client_name: string | null;
+  submitted_at: string;
+  status: "analyzing" | "ready" | "failed";
+  tldr: string | null;
+  raw_input: Record<string, unknown> | null;
+  notion_page_url: string | null;
+}
+
+interface FindingRow {
+  severity: Severity;
+  category: Finding["category"];
+  title: string;
+  what_to_clarify: string;
+  why_it_matters: string;
+  priority: number | null;
+}
+
 export default async function BriefingPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = supabaseServer();
 
-  const findings = [...MOCK_FINDINGS].sort(
-    (a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity],
-  );
+  const { data: briefing } = await supabase
+    .from("briefings")
+    .select(
+      "id, client_name, submitted_at, status, tldr, raw_input, notion_page_url",
+    )
+    .eq("id", id)
+    .single<BriefingRow>();
 
-  const clientName = "Crestline Card Switzerland GmbH";
-  const submitted = "2025-12-19";
-  const dueDate = "2026-01-09";
-  const budget = "CHF 25,000";
+  if (!briefing) notFound();
+
+  const { data: findingsRaw } = await supabase
+    .from("findings")
+    .select(
+      "severity, category, title, what_to_clarify, why_it_matters, priority",
+    )
+    .eq("briefing_id", id)
+    .returns<FindingRow[]>();
+
+  const findings: Finding[] = (findingsRaw ?? []).sort((a, b) => {
+    const rank = SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity];
+    if (rank !== 0) return rank;
+    const ap = a.priority ?? 99;
+    const bp = b.priority ?? 99;
+    return ap - bp;
+  });
+
+  const raw = (briefing.raw_input ?? {}) as Record<string, unknown>;
+  const dueDate = typeof raw.offerDueDate === "string" ? raw.offerDueDate : "—";
+  const budget =
+    typeof raw.budgetChf === "number" && raw.budgetChf > 0
+      ? `CHF ${raw.budgetChf.toLocaleString("en-CH")}`
+      : "—";
+  const submitted = briefing.submitted_at.slice(0, 10);
 
   return (
     <main className="min-h-screen">
@@ -123,31 +120,42 @@ export default async function BriefingPage({
         <header className="border-b border-awr-border pb-10">
           <p className={eyebrow}>Account Manager Brief</p>
           <h1 className="mt-6 text-5xl md:text-6xl font-bold tracking-tight leading-[0.95]">
-            {clientName}
+            {briefing.client_name ?? "Untitled briefing"}
           </h1>
           <p className="mt-6 text-awr-grey text-sm">
             Submitted {submitted} · Offer due {dueDate} · Budget {budget} ·
-            ID {id.slice(0, 8)}
+            Status {briefing.status}
           </p>
         </header>
 
         <section className="border-t border-awr-border mt-12 pt-12">
           <p className={`${eyebrow} mb-6`}>TL;DR</p>
-          <p className="text-lg leading-relaxed text-awr-off-white max-w-3xl">
-            Winter shoot at an unnamed premium Alpine hotel. Concept is solid
-            and well-anchored in prior shoot success. Three blockers before
-            pitch: venue identity, calendar conflict between production window
-            and shoot date, and budget viability against a multi-year buyout.
-          </p>
+          {briefing.tldr ? (
+            <p className="text-lg leading-relaxed text-awr-off-white max-w-3xl">
+              {briefing.tldr}
+            </p>
+          ) : (
+            <p className="text-awr-grey italic">
+              {briefing.status === "analyzing"
+                ? "Analysis in progress…"
+                : "No summary available."}
+            </p>
+          )}
         </section>
 
         <section className="border-t border-awr-border mt-12 pt-12">
           <p className={`${eyebrow} mb-8`}>Findings</p>
-          <div className="flex flex-col gap-4">
-            {findings.map((f, i) => (
-              <FindingCard key={i} finding={f} />
-            ))}
-          </div>
+          {findings.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {findings.map((f, i) => (
+                <FindingCard key={i} finding={f} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-awr-grey italic">
+              No findings recorded for this briefing.
+            </p>
+          )}
         </section>
 
         <section className="border-t border-awr-border mt-12 pt-12 pb-24">
@@ -159,6 +167,16 @@ export default async function BriefingPage({
             >
               Reply to client (drafted)
             </button>
+            {briefing.notion_page_url && (
+              <a
+                href={briefing.notion_page_url}
+                target="_blank"
+                rel="noreferrer"
+                className="border border-awr-border hover:border-awr-green-light text-awr-off-white px-6 py-3 text-sm font-medium tracking-wide rounded-sm transition-colors inline-flex items-center"
+              >
+                Open in Notion ↗
+              </a>
+            )}
             <button
               type="button"
               className="border border-awr-border hover:border-awr-green-light text-awr-off-white px-6 py-3 text-sm font-medium tracking-wide rounded-sm transition-colors"
