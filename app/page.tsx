@@ -101,8 +101,8 @@ export default function Home() {
         };
         throw new Error(data.error ?? `Request failed (${res.status})`);
       }
-      const data = (await res.json()) as { id: string };
-      router.push(`/briefing/${data.id}`);
+      await res.json().catch(() => ({}));
+      router.push("/thanks");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
       setSubmitting(false);
