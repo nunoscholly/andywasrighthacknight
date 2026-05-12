@@ -12,6 +12,13 @@ const eyebrow = "text-xs font-medium tracking-[0.18em] uppercase text-awr-grey";
 const inputBase =
   "w-full bg-transparent border border-awr-border px-4 py-3 text-base text-awr-off-white placeholder:text-awr-grey/60 focus:border-awr-green-light rounded-sm";
 
+const LOADING_PHASES = [
+  "Reading briefing…",
+  "Checking completeness…",
+  "Stress-testing the plan…",
+  "Drafting findings…",
+];
+
 function Field({
   label,
   hint,
@@ -66,6 +73,7 @@ export default function Home() {
   const [form, setForm] = useState<FormState>(CRESTLINE_BRIEFING);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadingPhase, setLoadingPhase] = useState(0);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -75,6 +83,12 @@ export default function Home() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setLoadingPhase(0);
+
+    const interval = setInterval(() => {
+      setLoadingPhase((p) => Math.min(p + 1, LOADING_PHASES.length - 1));
+    }, 4500);
+
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -92,7 +106,36 @@ export default function Home() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
       setSubmitting(false);
+    } finally {
+      clearInterval(interval);
     }
+  }
+
+  if (submitting) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center px-8">
+        <div className="text-center max-w-md">
+          <p className={`${eyebrow} mb-8`}>Andy is reading</p>
+          <div className="flex justify-center gap-2 mb-10">
+            <span className="w-2 h-2 bg-awr-green rounded-full animate-pulse" />
+            <span
+              className="w-2 h-2 bg-awr-green rounded-full animate-pulse"
+              style={{ animationDelay: "200ms" }}
+            />
+            <span
+              className="w-2 h-2 bg-awr-green rounded-full animate-pulse"
+              style={{ animationDelay: "400ms" }}
+            />
+          </div>
+          <p className="text-2xl font-bold tracking-tight">
+            {LOADING_PHASES[loadingPhase]}
+          </p>
+          <p className="mt-6 text-awr-grey text-sm">
+            This usually takes 20–30 seconds.
+          </p>
+        </div>
+      </main>
+    );
   }
 
   return (
