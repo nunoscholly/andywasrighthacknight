@@ -21,6 +21,9 @@ const FindingSchema = z.object({
 const AnalysisSchema = z.object({
   tldr: z.string().min(1),
   findings: z.array(FindingSchema),
+  risk_level: z.enum(["High", "Medium", "Low"]),
+  recommended_action: z.string().min(1),
+  drafted_reply: z.string().min(1),
 });
 
 const TOOL_INPUT_SCHEMA = {
@@ -74,8 +77,30 @@ const TOOL_INPUT_SCHEMA = {
         ],
       },
     },
+    risk_level: {
+      type: "string",
+      enum: ["High", "Medium", "Low"],
+      description:
+        "Overall project risk. High = any critical findings or major plausibility issues. Medium = warnings or completeness gaps. Low = clean brief with only minor info findings.",
+    },
+    recommended_action: {
+      type: "string",
+      description:
+        "One-line next step for the AM. Max 15 words. Examples: 'Follow-up email with 3 prioritized questions', 'Move directly to pitch', 'Escalate to senior'.",
+    },
+    drafted_reply: {
+      type: "string",
+      description:
+        "A polite, concise email the AM can edit and send. 2-3 short paragraphs. Open with thanks. Ask the three priority findings as questions. Sign off as 'The Andy Was Right team'. Plain text, no markdown.",
+    },
   },
-  required: ["tldr", "findings"],
+  required: [
+    "tldr",
+    "findings",
+    "risk_level",
+    "recommended_action",
+    "drafted_reply",
+  ],
 };
 
 const SYSTEM_PROMPT = `You are a senior Account Manager analyst at Andy Was Right, a Zurich-based creative content agency. A client has submitted a project briefing. Your job: produce a structured analysis for the AM who will respond.
@@ -93,7 +118,12 @@ Severity rules:
 - warning: needs clarification, scope creep risk.
 - info: worth noting, not actionable now.
 
-Produce 5–10 findings total. Quality over quantity. If the brief is unusually clean, return fewer.`;
+Produce 5–10 findings total. Quality over quantity. If the brief is unusually clean, return fewer.
+
+Also produce:
+- risk_level: overall project risk. "High" if any critical findings or major plausibility issues. "Medium" if warnings or completeness gaps. "Low" if the brief is clean with only minor info findings.
+- recommended_action: a single line telling the AM the most important next step (max 15 words).
+- drafted_reply: a polite, concise email the AM can edit and send to the client. 2-3 short paragraphs. Open with thanks for the briefing. Reference the top priority questions (the findings marked priority 1, 2, 3). Sign off as "The Andy Was Right team". Plain text, no markdown, no subject line.`;
 
 export async function analyzeBriefing(
   briefing: BriefingForm,
@@ -133,5 +163,11 @@ export async function analyzeBriefing(
   }
 
   const findings: Finding[] = parsed.data.findings;
-  return { tldr: parsed.data.tldr, findings };
+  return {
+    tldr: parsed.data.tldr,
+    findings,
+    risk_level: parsed.data.risk_level,
+    recommended_action: parsed.data.recommended_action,
+    drafted_reply: parsed.data.drafted_reply,
+  };
 }

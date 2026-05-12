@@ -54,14 +54,18 @@ export async function POST(request: Request) {
       if (findingsError) throw new Error(findingsError.message);
     }
 
+    const reqUrl = new URL(request.url);
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ?? `${reqUrl.protocol}//${reqUrl.host}`;
+    const briefingUrl = `${baseUrl}/briefing/${briefing.id}`;
+
     let notionPageUrl: string | null = null;
     try {
       notionPageUrl = await writeBriefingToNotion({
-        clientName: body.company || body.contactName || "Untitled",
-        projectTitle: body.projectTitle,
-        tldr: analysis.tldr,
-        findings: analysis.findings,
+        briefingUrl,
         briefing: body,
+        submittedAt: new Date().toISOString(),
+        analysis,
       });
     } catch (notionErr) {
       console.error(

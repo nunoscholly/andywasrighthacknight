@@ -46,7 +46,12 @@ export interface BriefingForm {
   finalNotes: string;
 }
 
+export type RiskLevel = "High" | "Medium" | "Low";
+
 export interface AnalysisResult {
   tldr: string;
   findings: Finding[];
+  risk_level: RiskLevel;
+  recommended_action: string;
+  drafted_reply: string;
 }
