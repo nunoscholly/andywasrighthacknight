@@ -45,3 +45,8 @@ export interface BriefingForm {
   timingNotes: string;
   finalNotes: string;
 }
+
+export interface AnalysisResult {
+  tldr: string;
+  findings: Finding[];
+}
