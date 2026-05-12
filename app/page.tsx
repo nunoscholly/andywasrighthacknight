@@ -12,13 +12,6 @@ const eyebrow = "text-xs font-medium tracking-[0.18em] uppercase text-awr-grey";
 const inputBase =
   "w-full bg-transparent border border-awr-border px-4 py-3 text-base text-awr-off-white placeholder:text-awr-grey/60 focus:border-awr-green-light rounded-sm";
 
-const LOADING_PHASES = [
-  "Reading briefing…",
-  "Checking completeness…",
-  "Stress-testing the plan…",
-  "Drafting findings…",
-];
-
 function Field({
   label,
   hint,
@@ -72,70 +65,25 @@ export default function Home() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(EMPTY_BRIEFING);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loadingPhase, setLoadingPhase] = useState(0);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitting(true);
-    setError(null);
-    setLoadingPhase(0);
 
-    const interval = setInterval(() => {
-      setLoadingPhase((p) => Math.min(p + 1, LOADING_PHASES.length - 1));
-    }, 4500);
+    fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+      keepalive: true,
+    }).catch((err) => {
+      console.error("[submit] analyze request failed:", err);
+    });
 
-    try {
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as {
-          error?: string;
-        };
-        throw new Error(data.error ?? `Request failed (${res.status})`);
-      }
-      await res.json().catch(() => ({}));
-      router.push("/thanks");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-      setSubmitting(false);
-    } finally {
-      clearInterval(interval);
-    }
-  }
-
-  if (submitting) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center px-8">
-        <div className="text-center max-w-md">
-          <p className={`${eyebrow} mb-8`}>Andy is reading</p>
-          <div className="flex justify-center gap-2 mb-10">
-            <span className="w-2 h-2 bg-awr-green rounded-full animate-pulse" />
-            <span
-              className="w-2 h-2 bg-awr-green rounded-full animate-pulse"
-              style={{ animationDelay: "200ms" }}
-            />
-            <span
-              className="w-2 h-2 bg-awr-green rounded-full animate-pulse"
-              style={{ animationDelay: "400ms" }}
-            />
-          </div>
-          <p className="text-2xl font-bold tracking-tight">
-            {LOADING_PHASES[loadingPhase]}
-          </p>
-          <p className="mt-6 text-awr-grey text-sm">
-            This usually takes 20–30 seconds.
-          </p>
-        </div>
-      </main>
-    );
+    router.push("/thanks");
   }
 
   return (
@@ -470,15 +418,12 @@ export default function Home() {
           </Section>
 
           <div className="border-t border-awr-border pt-12">
-            {error && (
-              <p className="mb-6 text-sev-critical text-sm">{error}</p>
-            )}
             <button
               type="submit"
               disabled={submitting}
               className="w-full bg-awr-green hover:bg-awr-green-light text-awr-off-white py-5 text-base font-medium tracking-wide rounded-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {submitting ? "Sending…" : "Send to Andy Was Right →"}
+              Send to Andy Was Right →
             </button>
             <p className="mt-4 text-xs text-awr-grey text-center">
               You&apos;ll hear back within two business days.
