@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CRESTLINE_BRIEFING, EMPTY_BRIEFING } from "@/lib/sample-briefing";
+import { EMPTY_BRIEFING } from "@/lib/sample-briefing";
 import type { BriefingForm } from "@/lib/types";
 
 type FormState = BriefingForm;
@@ -70,7 +70,7 @@ function Section({
 
 export default function Home() {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(CRESTLINE_BRIEFING);
+  const [form, setForm] = useState<FormState>(EMPTY_BRIEFING);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingPhase, setLoadingPhase] = useState(0);
@@ -159,22 +159,6 @@ export default function Home() {
             know, leave the rest blank. We&apos;ll come back to you with
             questions before we quote.
           </p>
-          <div className="mt-6 flex gap-6 text-sm">
-            <button
-              type="button"
-              onClick={() => setForm(EMPTY_BRIEFING)}
-              className="text-awr-grey hover:text-awr-off-white underline-offset-4 hover:underline"
-            >
-              Start blank
-            </button>
-            <button
-              type="button"
-              onClick={() => setForm(CRESTLINE_BRIEFING)}
-              className="text-awr-grey hover:text-awr-off-white underline-offset-4 hover:underline"
-            >
-              Load sample (Crestline)
-            </button>
-          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="pb-24">
