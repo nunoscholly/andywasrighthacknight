@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --awr-black: #0E0E0E;
+  --awr-off-white: #F4F1EA;
+  --awr-green: #2E5E3E;
+  --awr-green-light: #4A7A5A;
+  --awr-grey: #6B6B6B;
+  --awr-border: #1F1F1F;
+
+  --sev-critical: #D94545;
+  --sev-warning: #E8A33D;
+  --sev-info: #4A7A5A;
+}
+
+@theme inline {
+  --color-awr-black: var(--awr-black);
+  --color-awr-off-white: var(--awr-off-white);
+  --color-awr-green: var(--awr-green);
+  --color-awr-green-light: var(--awr-green-light);
+  --color-awr-grey: var(--awr-grey);
+  --color-awr-border: var(--awr-border);
+  --color-sev-critical: var(--sev-critical);
+  --color-sev-warning: var(--sev-warning);
+  --color-sev-info: var(--sev-info);
+  --font-sans: var(--font-roboto);
+}
+
+html,
+body {
+  background: var(--awr-black);
+  color: var(--awr-off-white);
+}
+
+body {
+  font-family: var(--font-roboto), Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--awr-green);
+  color: var(--awr-off-white);
+}
+
+input,
+textarea {
+  color: var(--awr-off-white);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--awr-grey);
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--awr-green-light);
+}
